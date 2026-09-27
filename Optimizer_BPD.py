@@ -3,12 +3,13 @@ import math
 import time
 import re
 import os
+import Selection_Strategy
 
 S_XORs_2PD = []
 S_XORs_2PD_for_new_pair = [dict()]*5
 
 
-def Optimizer_with_BPD(n, m, XORs, NLs, NOTs, log_filename='log', H=999):
+def Optimizer_with_BPD(n, m, XORs, NLs, NOTs, log_filename='log', H=999, sbp_pool_size=None):
     logs = os.listdir('./log')
     i = 0
     while (True):
@@ -27,7 +28,8 @@ def Optimizer_with_BPD(n, m, XORs, NLs, NOTs, log_filename='log', H=999):
     Dist = initialize_Dist(n, Y)
     initialize_SXORs(S)
     with open('./log/'+log_file, 'a') as flog:
-        flog.write(f'n : {n}\nm : {m}\nH : {H}\nY : {Y}\nXORs : {XORs}\nHY : {HY}\n\n')
+        flog.write(f'n : {n}\nm : {m}\nH : {H}\nY : {Y}\nXORs : {XORs}\nHY : {HY}\n'
+                    f'sbp_pool_size : {sbp_pool_size}\n\n')
 
     with open('./log/'+log_file, 'a') as flog:
         flog.write(f'Dist : {Dist}\n' + f'time : {time.time() - st:.2f} (+{time.time()-bst:.2f})\n\n')
@@ -101,32 +103,20 @@ def Optimizer_with_BPD(n, m, XORs, NLs, NOTs, log_filename='log', H=999):
 
             end_Filtering_2 = time.time()
 
-            # Minimize Sum of Dist
-            W_sum = set()
-            min_sum = 999
-            for w in WD_Dist:
-                s = sum([i for i in WD_Dist[w] if i != 999])
-                if min_sum > s:
-                    W_sum = {w}
-                    min_sum = s
-                elif min_sum == s:
-                    W_sum.add(w)
+            # Candidate selection: Sum-then-Euclidean-Norm-then-random
+            # (original), or SBP-style bounded pool (Phase 1). All depth
+            # budgeting already happened above (make_WD's H filtering,
+            # HY-based Dist filtering) - Selection_Strategy only chooses
+            # among already-depth-valid candidates, untouched either way.
+            # NOTE: this collapses the original code's separate "Sum" and
+            # "Norm" timing measurements into one combined selection-time
+            # measurement (end_Sum_Dist == end of selection, end_Enm_Dist
+            # set equal to it so the existing log line format below still
+            # works unchanged; the "Norm" sub-interval will just read as
+            # 0.00 in the log from now on).
+            w = Selection_Strategy.select_candidate(WD_Dist, sbp_pool_size)
             end_Sum_Dist = time.time()
-
-            # Maximize Euclidean norm of Dist
-            W_Enm = []
-            max_Enm = 0
-            for w in W_sum:
-                e = sum([i*i for i in WD_Dist[w] if i != 999])
-                if max_Enm < e:
-                    W_Enm = [w]
-                    max_Enm = e
-                elif max_Enm == e:
-                    W_Enm.append(w)
-            end_Enm_Dist = time.time()
-
-            # Random
-            w = random.choice(W_Enm)
+            end_Enm_Dist = end_Sum_Dist
 
             Sname.append(f't[{t}]')
             t += 1
@@ -455,7 +445,7 @@ def make_Circuit(n, m, k, S, D, Y, NLs, NOTs):
         elif 'g' in B_match[b]:
             j = int(re.findall(r'\d+', B_match[b])[0])
             if '!' in NLs[j]:
-                Circuit.append(f'{B_match[b]}=r[{2*j}]{NLs[j][1]}r[{2*j+1}]^1')
+                Circuit.append(f'{B_match[b]}=(r[{2*j}]{NLs[j][1]}r[{2*j+1}])^1')
             else:
                 Circuit.append(f'{B_match[b]}=r[{2*j}]{NLs[j]}r[{2*j+1}]')
         else:

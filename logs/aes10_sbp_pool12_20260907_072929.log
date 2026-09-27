@@ -1,0 +1,10 @@
+I will optimize AES10 (8-bit -> 8-bit) on 4 multi cores using BPD (H = 26) using SBP selection (pool=12)
+
+[Circuit_Cleanup] no dead gates found (83 XORs) [verified]
+Write AES10 (H = 26) by using 83XORs in core01_sbp12 (time : 13800.20s)
+[Circuit_Cleanup] no dead gates found (85 XORs) [verified]
+Write AES10 (H = 26) by using 85XORs in core02_sbp12 (time : 15669.99s)
+[Circuit_Cleanup] no dead gates found (85 XORs) [verified]
+Write AES10 (H = 26) by using 85XORs in core00_sbp12 (time : 16682.16s)
+[Circuit_Cleanup] no dead gates found (84 XORs) [verified]
+Write AES10 (H = 26) by using 84XORs in core03_sbp12 (time : 16125.36s)

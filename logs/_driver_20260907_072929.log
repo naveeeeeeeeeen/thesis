@@ -1,0 +1,32 @@
+=== Overnight AES10/H=26 batch started at Mon Sep  7 07:29:29 AM IST 2026 ===
+Repository root: /home/naveen/Desktop/iitr/seminar/thesis2/Extended-BP-Framework
+Logs will be written under: /home/naveen/Desktop/iitr/seminar/thesis2/Extended-BP-Framework/logs
+
+--- [Mon Sep  7 07:29:29 AM IST 2026] Starting config: baseline (args: <none>) ---
+    Logging to: logs/aes10_baseline_20260907_072929.log
+    Config 'baseline' finished successfully.
+
+--- [Mon Sep  7 12:51:50 PM IST 2026] Starting config: sbp_pool2 (args: --sbp --sbp-pool 2) ---
+    Logging to: logs/aes10_sbp_pool2_20260907_072929.log
+    Config 'sbp_pool2' finished successfully.
+
+--- [Mon Sep  7 05:55:42 PM IST 2026] Starting config: sbp_pool5 (args: --sbp --sbp-pool 5) ---
+    Logging to: logs/aes10_sbp_pool5_20260907_072929.log
+    Config 'sbp_pool5' finished successfully.
+
+--- [Mon Sep  7 11:49:32 PM IST 2026] Starting config: sbp_pool12 (args: --sbp --sbp-pool 12) ---
+    Logging to: logs/aes10_sbp_pool12_20260907_072929.log
+    Config 'sbp_pool12' finished successfully.
+
+=== All configs attempted. Batch finished at Tue Sep  8 04:27:34 AM IST 2026 ===
+
+=== Summary: best XOR count per configuration ===
+CONFIG         BEST_XOR   ALL_CORE_RESULTS
+------         --------   ----------------
+baseline       85         85,87,87,88
+sbp_pool2      82         82,85,87,93
+sbp_pool5      86         86,90,90,90
+sbp_pool12     83         83,84,85,85
+
+Full per-config logs are in: /home/naveen/Desktop/iitr/seminar/thesis2/Extended-BP-Framework/logs/aes10_*_20260907_072929.log
+Look for '[Circuit_Cleanup]' lines in any of them to see Phase 0 dead-gate findings per run.

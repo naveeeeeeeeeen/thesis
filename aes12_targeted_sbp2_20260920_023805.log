@@ -1,0 +1,33 @@
+nohup: ignoring input
+I will optimize AES12 (8-bit -> 8-bit) on 2 multi cores using BPD (H = 15) with randomly modificatons using SBP selection (pool=2)
+
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ^^^^^^^^^^^^^^^^^^^
+  File "/home/naveen/Desktop/iitr/seminar/thesis2/Extended-BP-Framework/main.py", line 103, in optimizer_with_BPD_for_modified_circuit
+    circuit, cleanup_stats = Circuit_Cleanup.clean_circuit(circuit, n=n, m=m)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/naveen/Desktop/iitr/seminar/thesis2/Extended-BP-Framework/Circuit_Cleanup.py", line 249, in clean_circuit
+    ok, failing_input = verify_equivalence(Circuit, new_Circuit, n, m)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/naveen/Desktop/iitr/seminar/thesis2/Extended-BP-Framework/Circuit_Cleanup.py", line 147, in verify_equivalence
+    out_b = _simulate_parsed(parsed_b, n, m, x_bits)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/naveen/Desktop/iitr/seminar/thesis2/Extended-BP-Framework/Circuit_Cleanup.py", line 114, in _simulate_parsed
+    val = env[operands[0]] ^ (1 if has_not else 0)
+          ~~~^^^^^^^^^^^^^
+KeyError: 't[52]'
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/naveen/Desktop/iitr/seminar/thesis2/Extended-BP-Framework/main.py", line 273, in <module>
+    [r.get() for r in ret]
+     ^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/pool.py", line 774, in get
+    raise self._value
+KeyError: 't[52]'

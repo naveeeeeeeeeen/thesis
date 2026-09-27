@@ -5,6 +5,7 @@ import Extract_XOR_information
 import Modification_Circuits
 import Optimizer_BPD
 import Optimizer_RNBP
+import Circuit_Cleanup
 import Write_Circuit
 import Code_spac_analysis
 import time
@@ -51,57 +52,117 @@ def Read_sizes(filename):
     return n, m
 
 
-def optimizer_with_BPD(n, m, XORs, NLs, NOTs, filename, pc_name, H):
+def _log_cleanup(cleanup_stats):
+    """Small shared helper: print a one-line note when Phase 0 cleanup
+    actually removed something, so it's visible without cluttering the
+    normal case where nothing was found."""
+    if cleanup_stats['total_removed'] > 0:
+        print(f'  [Phase0 cleanup] {cleanup_stats["original_xor_count"]} -> '
+              f'{cleanup_stats["final_xor_count"]} XORs '
+              f'({cleanup_stats["shadowed_removed"]} shadowed + '
+              f'{cleanup_stats["unreachable_removed"]} unreachable removed, '
+              f'verified={cleanup_stats["verified"]})')
+
+
+def _mode_tag(sbp_pool_size):
+    """Short, grep-friendly tag identifying which selection strategy
+    produced a given result - embedded in both the output filename and
+    the printed summary line, so overnight batch logs can be scanned
+    per-configuration without needing to track command-line history."""
+    return f'_sbp{sbp_pool_size}' if sbp_pool_size is not None else '_orig'
+
+
+def optimizer_with_BPD(n, m, XORs, NLs, NOTs, filename, pc_name, H, sbp_pool_size=None):
     st = time.time()
     add_on_logname = f'_{H}H_{pc_name}'
     circuit, XORnum = Optimizer_BPD.Optimizer_with_BPD(
-        n, m, XORs, NLs, NOTs, log_filename=filename + add_on_logname, H=H)
+        n, m, XORs, NLs, NOTs, log_filename=filename + add_on_logname, H=H,
+        sbp_pool_size=sbp_pool_size)
 
-    add_on_name = f'_{H}H_{XORnum}XORs_{pc_name}_{int(time.time()-st)}s'
+    try:
+        circuit, cleanup_stats = Circuit_Cleanup.clean_circuit(circuit, n=n, m=m)
+        XORnum = cleanup_stats['final_xor_count']
+        _log_cleanup(cleanup_stats)
+    except Exception as e:
+        print(f'  [Phase0 cleanup] WARNING: cleanup raised {type(e).__name__}: {e}; '
+              f'keeping the raw {XORnum}-XOR circuit instead of losing it.')
+
+    tag = _mode_tag(sbp_pool_size)
+    add_on_name = f'_{H}H_{XORnum}XORs_{pc_name}{tag}_{int(time.time()-st)}s'
     Write_Circuit.Write_Circuit(filename, add_on_name, circuit)
-    print(f'Write {filename} (H = {H}) by using {XORnum}XORs in {pc_name} (time : {time.time()-st:.2f}s)')
+    print(f'Write {filename} (H = {H}) by using {XORnum}XORs in {pc_name}{tag} (time : {time.time()-st:.2f}s)')
     return 1
 
 
-def optimizer_with_BPD_for_modified_circuit(n, m, XORs, NLs, NOTs, filename, pc_name, H):
+def optimizer_with_BPD_for_modified_circuit(n, m, XORs, NLs, NOTs, filename, pc_name, H, sbp_pool_size=None):
     st = time.time()
     new_XORs, new_NLs, new_NOTs, _ = Modification_Circuits.Modify_circuits(
         n, m, XORs, NLs, NOTs)
 
     add_on_logname = f'_{H}H_{pc_name}'
     circuit, XORnum = Optimizer_BPD.Optimizer_with_BPD(
-        n, m, new_XORs, new_NLs, new_NOTs, log_filename=filename + add_on_logname, H=H)
+        n, m, new_XORs, new_NLs, new_NOTs, log_filename=filename + add_on_logname, H=H,
+        sbp_pool_size=sbp_pool_size)
 
-    add_on_name = f'_{H}H_{XORnum}XORs_{pc_name}_{int(time.time()-st)}s'
+    try:
+        circuit, cleanup_stats = Circuit_Cleanup.clean_circuit(circuit, n=n, m=m)
+        XORnum = cleanup_stats['final_xor_count']
+        _log_cleanup(cleanup_stats)
+    except Exception as e:
+        print(f'  [Phase0 cleanup] WARNING: cleanup raised {type(e).__name__}: {e}; '
+              f'keeping the raw {XORnum}-XOR circuit instead of losing it.')
+
+    tag = _mode_tag(sbp_pool_size)
+    add_on_name = f'_{H}H_{XORnum}XORs_{pc_name}{tag}_{int(time.time()-st)}s'
     Write_Circuit.Write_Circuit(filename, add_on_name, circuit)
-    print(f'Write {filename} (H = {H}) by using {XORnum}XORs in {pc_name} (time : {time.time()-st:.2f}s)')
+    print(f'Write {filename} (H = {H}) by using {XORnum}XORs in {pc_name}{tag} (time : {time.time()-st:.2f}s)')
     return 1
 
 
-def optimizer_with_RNBP(n, m, XORs, NLs, NOTs, filename, pc_name):
+def optimizer_with_RNBP(n, m, XORs, NLs, NOTs, filename, pc_name, sbp_pool_size=None):
     st = time.time()
     add_on_logname = f'_RNBP_{pc_name}'
     circuit, XORnum = Optimizer_RNBP.Optimizer_with_RNBP(
-        n, m, XORs, NLs, NOTs, log_filename=filename + add_on_logname)
+        n, m, XORs, NLs, NOTs, log_filename=filename + add_on_logname,
+        sbp_pool_size=sbp_pool_size)
 
-    add_on_name = f'_RNBP_{XORnum}XORs_{pc_name}_{int(time.time()-st)}s'
+    try:
+        circuit, cleanup_stats = Circuit_Cleanup.clean_circuit(circuit, n=n, m=m)
+        XORnum = cleanup_stats['final_xor_count']
+        _log_cleanup(cleanup_stats)
+    except Exception as e:
+        print(f'  [Phase0 cleanup] WARNING: cleanup raised {type(e).__name__}: {e}; '
+              f'keeping the raw {XORnum}-XOR circuit instead of losing it.')
+
+    tag = _mode_tag(sbp_pool_size)
+    add_on_name = f'_RNBP_{XORnum}XORs_{pc_name}{tag}_{int(time.time()-st)}s'
     Write_Circuit.Write_Circuit(filename, add_on_name, circuit)
-    print(f'Write {filename} by using {XORnum}XORs in {pc_name} (time : {time.time()-st:.2f}s)')
+    print(f'Write {filename} by using {XORnum}XORs in {pc_name}{tag} (time : {time.time()-st:.2f}s)')
     return 1
 
 
-def optimizer_with_RNBP_for_modified_circuit(n, m, XORs, NLs, NOTs, filename, pc_name):
+def optimizer_with_RNBP_for_modified_circuit(n, m, XORs, NLs, NOTs, filename, pc_name, sbp_pool_size=None):
     st = time.time()
     new_XORs, new_NLs, new_NOTs, _ = Modification_Circuits.Modify_circuits(
         n, m, XORs, NLs, NOTs)
 
     add_on_logname = f'_RNBP_{pc_name}'
     circuit, XORnum = Optimizer_RNBP.Optimizer_with_RNBP(
-        n, m, new_XORs, new_NLs, new_NOTs, log_filename=filename + add_on_logname)
+        n, m, new_XORs, new_NLs, new_NOTs, log_filename=filename + add_on_logname,
+        sbp_pool_size=sbp_pool_size)
 
-    add_on_name = f'_RNBP_{XORnum}XORs_{pc_name}_{int(time.time()-st)}s'
+    try:
+        circuit, cleanup_stats = Circuit_Cleanup.clean_circuit(circuit, n=n, m=m)
+        XORnum = cleanup_stats['final_xor_count']
+        _log_cleanup(cleanup_stats)
+    except Exception as e:
+        print(f'  [Phase0 cleanup] WARNING: cleanup raised {type(e).__name__}: {e}; '
+              f'keeping the raw {XORnum}-XOR circuit instead of losing it.')
+
+    tag = _mode_tag(sbp_pool_size)
+    add_on_name = f'_RNBP_{XORnum}XORs_{pc_name}{tag}_{int(time.time()-st)}s'
     Write_Circuit.Write_Circuit(filename, add_on_name, circuit)
-    print(f'Write {filename} by using {XORnum}XORs in {pc_name} (time : {time.time()-st:.2f}s)')
+    print(f'Write {filename} by using {XORnum}XORs in {pc_name}{tag} (time : {time.time()-st:.2f}s)')
     return 1
 
 
@@ -121,6 +182,13 @@ if __name__ == '__main__':
                         help="The depth limit (default : 23)", type=int, default=23)
     parser.add_argument(
         "-r", "--random", help="Random circuit modification mode (default : False)", type=bool, default=False)
+    parser.add_argument(
+        "--sbp", help="Use SBP-style bounded-pool candidate selection instead of the "
+                      "original Sum-then-Norm-then-random strategy (default: off, i.e. "
+                      "original behavior)", action='store_true')
+    parser.add_argument(
+        "--sbp-pool", help="SBP candidate pool size (chosenParam). Only used when --sbp "
+                           "is set (default: 5)", type=int, default=5)
 
     subparser = parser.add_subparsers(
         dest="command", help="Available commands")
@@ -175,7 +243,9 @@ if __name__ == '__main__':
             modify = ' with randomly modificatons'
         elif args.random == False:
             modify = ''
-        print(f'I will optimize {args.filename} ({n}-bit -> {m}-bit) on {multi_proc} using {algorithm}' + modify)
+        sbp_pool_size = args.sbp_pool if args.sbp else None
+        selection_desc = f' using SBP selection (pool={sbp_pool_size})' if args.sbp else ''
+        print(f'I will optimize {args.filename} ({n}-bit -> {m}-bit) on {multi_proc} using {algorithm}' + modify + selection_desc)
 
         Change_Circuit_Formal.circuit_formal(n, m, args.filename)
         XORs, NLs, NOTs = Extract_XOR_information.extract_XOR_NOTs(
@@ -183,36 +253,39 @@ if __name__ == '__main__':
         if args.multi == 1:
             if (args.algorithm == 'RNBP') and (args.random == False):
                 optimizer_with_RNBP(n, m, XORs, NLs, NOTs,
-                                    args.filename, 'single')
+                                    args.filename, 'single', sbp_pool_size=sbp_pool_size)
             elif (args.algorithm == 'RNBP') and (args.random == True):
                 optimizer_with_RNBP_for_modified_circuit(
-                    n, m, XORs, NLs, NOTs, args.filename, 'single')
+                    n, m, XORs, NLs, NOTs, args.filename, 'single', sbp_pool_size=sbp_pool_size)
             elif (args.algorithm == 'BPD') and (args.random == False):
                 optimizer_with_BPD(n, m, XORs, NLs, NOTs,
-                                   args.filename, 'single', args.depth_limit)
+                                   args.filename, 'single', args.depth_limit, sbp_pool_size=sbp_pool_size)
             elif (args.algorithm == 'BPD') and (args.random == True):
                 optimizer_with_BPD_for_modified_circuit(
-                    n, m, XORs, NLs, NOTs, args.filename, 'single', args.depth_limit)
+                    n, m, XORs, NLs, NOTs, args.filename, 'single', args.depth_limit, sbp_pool_size=sbp_pool_size)
         elif args.multi > 1:
             p = Pool(args.multi)
             ret = [0]*args.multi
             if (args.algorithm == 'RNBP') and (args.random == False):
                 for pc_cnt in range(args.multi):
                     ret[pc_cnt] = p.apply_async(optimizer_with_RNBP, [
-                                                n, m, XORs, NLs, NOTs, args.filename, f'core{pc_cnt:02d}'])
+                                                n, m, XORs, NLs, NOTs, args.filename, f'core{pc_cnt:02d}'],
+                                                {'sbp_pool_size': sbp_pool_size})
             elif (args.algorithm == 'RNBP') and (args.random == True):
                 for pc_cnt in range(args.multi):
                     ret[pc_cnt] = p.apply_async(optimizer_with_RNBP_for_modified_circuit, [
-                                                n, m, XORs, NLs, NOTs, args.filename, f'core{pc_cnt:02d}'])
+                                                n, m, XORs, NLs, NOTs, args.filename, f'core{pc_cnt:02d}'],
+                                                {'sbp_pool_size': sbp_pool_size})
             elif (args.algorithm == 'BPD') and (args.random == False):
                 for pc_cnt in range(args.multi):
                     ret[pc_cnt] = p.apply_async(optimizer_with_BPD, [
-                                                n, m, XORs, NLs, NOTs, args.filename, f'core{pc_cnt:02d}', args.depth_limit])
+                                                n, m, XORs, NLs, NOTs, args.filename, f'core{pc_cnt:02d}', args.depth_limit],
+                                                {'sbp_pool_size': sbp_pool_size})
             elif (args.algorithm == 'BPD') and (args.random == True):
                 for pc_cnt in range(args.multi):
                     ret[pc_cnt] = p.apply_async(optimizer_with_BPD_for_modified_circuit, [
-                                                n, m, XORs, NLs, NOTs, args.filename, f'core{pc_cnt:02d}', args.depth_limit])
+                                                n, m, XORs, NLs, NOTs, args.filename, f'core{pc_cnt:02d}', args.depth_limit],
+                                                {'sbp_pool_size': sbp_pool_size})
             [r.get() for r in ret]
             p.close()
             p.join()
-

@@ -1,0 +1,8 @@
+nohup: ignoring input
+I will optimize AES10 (8-bit -> 8-bit) on 2 multi cores using BPD (H = 26) with randomly modificatons using SBP selection (pool=2)
+
+[Circuit_Cleanup] no dead gates found (82 XORs) [verified]
+Write AES10 (H = 26) by using 82XORs in core01_sbp2 (time : 11579.31s)
+[Circuit_Cleanup] removed 0 shadowed + 1 unreachable XOR gate(s) (91 -> 90 XORs) [verified]
+  [Phase0 cleanup] 91 -> 90 XORs (0 shadowed + 1 unreachable removed, verified=True)
+Write AES10 (H = 26) by using 90XORs in core00_sbp2 (time : 14461.05s)

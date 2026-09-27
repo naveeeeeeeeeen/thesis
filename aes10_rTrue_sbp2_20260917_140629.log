@@ -1,0 +1,3 @@
+nohup: ignoring input
+I will optimize AES10 (8-bit -> 8-bit) on 2 multi cores using BPD (H = 26) with randomly modificatons using SBP selection (pool=2)
+

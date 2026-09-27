@@ -1,0 +1,8 @@
+nohup: ignoring input
+I will optimize AES12 (8-bit -> 8-bit) on 2 multi cores using BPD (H = 15) with randomly modificatons using SBP selection (pool=2)
+
+[Circuit_Cleanup] no dead gates found (109 XORs) [verified]
+Write AES12 (H = 15) by using 109XORs in core00_sbp2 (time : 43197.20s)
+[Circuit_Cleanup] !! VERIFICATION FAILED on input [0, 0, 0, 0, 0, 0, 0, 0] - reverting to original circuit, no gates removed. This should never happen; please report the circuit that triggered it.
+  [Phase0 cleanup] 107 -> 106 XORs (1 shadowed + 0 unreachable removed, verified=False)
+Write AES12 (H = 15) by using 106XORs in core01_sbp2 (time : 30980.06s)
